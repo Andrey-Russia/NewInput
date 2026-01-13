@@ -366,30 +366,8 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
         {
             ""name"": ""PlayerCar"",
             ""id"": ""270dba15-4505-4735-bd96-7fa66f22659b"",
-            ""actions"": [
-                {
-                    ""name"": ""New action"",
-                    ""type"": ""Button"",
-                    ""id"": ""a0959b8a-23b1-4daf-a86e-150a13438ed7"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                }
-            ],
-            ""bindings"": [
-                {
-                    ""name"": """",
-                    ""id"": ""f79ff1fe-6142-4adb-9c9e-de256ae291f4"",
-                    ""path"": """",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""New action"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                }
-            ]
+            ""actions"": [],
+            ""bindings"": []
         }
     ],
     ""controlSchemes"": [
@@ -430,7 +408,6 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
         m_Player_Jump = m_Player.FindAction("Jump", throwIfNotFound: true);
         // PlayerCar
         m_PlayerCar = asset.FindActionMap("PlayerCar", throwIfNotFound: true);
-        m_PlayerCar_Newaction = m_PlayerCar.FindAction("New action", throwIfNotFound: true);
     }
 
     ~@MovementController()
@@ -641,7 +618,6 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
     // PlayerCar
     private readonly InputActionMap m_PlayerCar;
     private List<IPlayerCarActions> m_PlayerCarActionsCallbackInterfaces = new List<IPlayerCarActions>();
-    private readonly InputAction m_PlayerCar_Newaction;
     /// <summary>
     /// Provides access to input actions defined in input action map "PlayerCar".
     /// </summary>
@@ -653,10 +629,6 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
         public PlayerCarActions(@MovementController wrapper) { m_Wrapper = wrapper; }
-        /// <summary>
-        /// Provides access to the underlying input action "PlayerCar/Newaction".
-        /// </summary>
-        public InputAction @Newaction => m_Wrapper.m_PlayerCar_Newaction;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -683,9 +655,6 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_PlayerCarActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_PlayerCarActionsCallbackInterfaces.Add(instance);
-            @Newaction.started += instance.OnNewaction;
-            @Newaction.performed += instance.OnNewaction;
-            @Newaction.canceled += instance.OnNewaction;
         }
 
         /// <summary>
@@ -697,9 +666,6 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
         /// <seealso cref="PlayerCarActions" />
         private void UnregisterCallbacks(IPlayerCarActions instance)
         {
-            @Newaction.started -= instance.OnNewaction;
-            @Newaction.performed -= instance.OnNewaction;
-            @Newaction.canceled -= instance.OnNewaction;
         }
 
         /// <summary>
@@ -802,12 +768,5 @@ public partial class @MovementController: IInputActionCollection2, IDisposable
     /// <seealso cref="PlayerCarActions.RemoveCallbacks(IPlayerCarActions)" />
     public interface IPlayerCarActions
     {
-        /// <summary>
-        /// Method invoked when associated input action "New action" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnNewaction(InputAction.CallbackContext context);
     }
 }

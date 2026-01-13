@@ -17,6 +17,7 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
+        _inputs = GetComponent<inputs>();
         _rb = GetComponent<Rigidbody>();
         _camera = GetComponentInChildren<Camera>();
 

@@ -280,30 +280,8 @@
         {
             "name": "PlayerCar",
             "id": "270dba15-4505-4735-bd96-7fa66f22659b",
-            "actions": [
-                {
-                    "name": "New action",
-                    "type": "Button",
-                    "id": "a0959b8a-23b1-4daf-a86e-150a13438ed7",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "f79ff1fe-6142-4adb-9c9e-de256ae291f4",
-                    "path": "",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "New action",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
+            "actions": [],
+            "bindings": []
         }
     ],
     "controlSchemes": [
