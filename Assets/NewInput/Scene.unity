@@ -248,6 +248,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Actions: {fileID: -944628639613478452, guid: f52116ad0d857aa4dafb81d222b8ebff, type: 3}
   m_NotificationBehavior: 0
+  m_UIInputModule: {fileID: 0}
   m_DeviceLostEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -332,7 +333,7 @@ MonoBehaviour:
   _inputs: {fileID: 343766093}
   Speed: 1000
   JumpForce: 5
-  MouseSence: 20
+  MouseSence: 70
 --- !u!54 &343766095
 Rigidbody:
   m_ObjectHideFlags: 0

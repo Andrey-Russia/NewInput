@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
@@ -44,7 +45,26 @@ public class Player : MonoBehaviour
         _yRotation += _inputs.look.x;
 
         _camera.transform.localRotation = Quaternion.Euler(_xRotation, 0, 0);
-        transform.rotation = Quaternion.Euler(_yRotation, 0, 0);
+        transform.rotation = Quaternion.Euler(0, _yRotation, 0);
+
+        var scrollAmount = Input.mouseScrollDelta.y;
+        if (scrollAmount != 0)
+            AdjustCameraDistance(scrollAmount);
+    }
+
+    private void AdjustCameraDistance(float delta)
+    {
+        const float maxDistance = 10f;
+        const float minDistance = 1f;
+        const float zoomSensivity = 5f;
+
+        var currentDistance = (_camera.transform.position - transform.position).magnitude;
+        var desiredDistance = currentDistance - delta * zoomSensivity;
+
+        desiredDistance = Mathf.Clamp(desiredDistance, minDistance, maxDistance);
+
+        var lookDirecton = (_camera.transform.position - transform.position).normalized;
+        _camera.transform.position = transform.position + lookDirecton * desiredDistance;
     }
 
     private void OnJump()
