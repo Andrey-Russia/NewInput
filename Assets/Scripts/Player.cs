@@ -16,6 +16,7 @@ public class Player : MonoBehaviour
     private float _xRotation = 0;
     private float _yRotation = 0;
 
+
     private void Awake()
     {
         _inputs = GetComponent<inputs>();
@@ -30,6 +31,8 @@ public class Player : MonoBehaviour
     {
         OnMove();
         OnLook();
+        if (Keyboard.current.eKey.wasPressedThisFrame)
+            _inputs.OnSwitchMap(); 
     }
 
     private void OnMove()

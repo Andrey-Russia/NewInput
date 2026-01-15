@@ -11,6 +11,8 @@ public class inputs : MonoBehaviour
     public bool Shoot;
     public bool Jump;
 
+    public PlayerInput playerInput;
+
     public void OnMove(InputValue value)
     {
         Move = value.Get<Vector2>();
@@ -31,6 +33,21 @@ public class inputs : MonoBehaviour
     {
         Jump = value.isPressed;
         JumpEvent?.Invoke();
+    }
+
+    public void OnSwitchMap()
+    {
+
+        if (playerInput.currentActionMap.name == "Player")
+        {
+            playerInput.SwitchCurrentActionMap("PlayerCar");
+            Debug.Log("Switched to PlayerCar");
+        }
+        else
+        {
+            playerInput.SwitchCurrentActionMap("Player");
+            Debug.Log("Switched to Player");
+        }
     }
 }
   

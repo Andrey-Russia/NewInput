@@ -291,7 +291,7 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 764757bf-5f7e-4d22-a63a-279f2da803cc
     m_ActionName: 'Player/Jump[/Keyboard/space]'
-  m_NeverAutoSwitchControlSchemes: 0
+  m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
@@ -318,6 +318,7 @@ MonoBehaviour:
   look: {x: 0, y: 0}
   Shoot: 0
   Jump: 0
+  playerInput: {fileID: 343766092}
 --- !u!114 &343766094
 MonoBehaviour:
   m_ObjectHideFlags: 0

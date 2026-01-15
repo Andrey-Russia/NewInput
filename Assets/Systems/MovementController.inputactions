@@ -320,8 +320,30 @@
         {
             "name": "PlayerCar",
             "id": "270dba15-4505-4735-bd96-7fa66f22659b",
-            "actions": [],
-            "bindings": []
+            "actions": [
+                {
+                    "name": "Switch",
+                    "type": "Button",
+                    "id": "aae4fd40-6e2f-4271-96ee-9337b0150f45",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "a7a4d9a8-5451-4441-ab91-758417e54eed",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "Switch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [
