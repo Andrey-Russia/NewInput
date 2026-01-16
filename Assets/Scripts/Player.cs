@@ -31,8 +31,18 @@ public class Player : MonoBehaviour
     {
         OnMove();
         OnLook();
+        
         if (Keyboard.current.eKey.wasPressedThisFrame)
-            _inputs.OnSwitchMap(); 
+        {
+            _inputs.playerInput.SwitchCurrentActionMap("PlayerCar");
+            Debug.Log("Switched to PlayerCar");
+        }
+
+        if (Keyboard.current.qKey.wasPressedThisFrame)
+        {
+            _inputs.playerInput.SwitchCurrentActionMap("Player");
+            Debug.Log("Switched to Player");
+        }
     }
 
     private void OnMove()
