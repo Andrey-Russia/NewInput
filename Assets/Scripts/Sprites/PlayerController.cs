@@ -2,70 +2,62 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float _speed = 5f;
-    [SerializeField] private float _jumpForce = 10f;
-    [SerializeField] private int _maxJumps = 2; 
+    [SerializeField] private float MoveSpeed = 100f;
+    [SerializeField] private float JumpForce = 100f;
+    [SerializeField] private bool IsFacingRight = true;
 
     private Rigidbody2D _rb;
-    private Animator _animator;
+    private Animator _anim;
     private bool _isGrounded;
-    private int _currentJumps;
 
-    private void Start()
+    private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
-        _animator = GetComponent<Animator>();
+        _anim = GetComponent<Animator>();
+    }
+
+    private void FixedUpdate()
+    {
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        _rb.linearVelocity = new Vector2(horizontalInput * MoveSpeed, _rb.linearVelocity.y);
+
+        if ((horizontalInput > 0 && !IsFacingRight) || (horizontalInput < 0 && IsFacingRight))
+            Flip();
+
+        _anim.SetBool("isRunning", Mathf.Abs(_rb.linearVelocity.x) > 0.1f);
     }
 
     private void Update()
     {
-        float moveHorizontal = Input.GetAxis("Horizontal");
-        Vector2 movement = new Vector2(moveHorizontal * _speed, _rb.linearVelocity.y);
-        _rb.linearVelocity = movement;
-
-        if (Input.GetButtonDown("Jump") && CanJump())
+        if (Input.GetButtonDown("Jump") && _isGrounded)
         {
             Jump();
         }
-
-        _animator.SetFloat("Speed", Mathf.Abs(moveHorizontal));
-        _animator.SetBool("IsGrounded", _isGrounded);
-        _animator.SetInteger("CurrentJumps", _currentJumps);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void Jump()
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
+        _rb.AddForce(Vector2.up * JumpForce, ForceMode2D.Impulse);
+        _anim.SetTrigger("isJumping");
+    }
+
+    private void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject.CompareTag("Ground"))
             _isGrounded = true;
-            _currentJumps = 0;
-        }
     }
 
-    private void OnCollisionExit2D(Collision2D collision)
+    private void OnCollisionExit2D(Collision2D col)
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
+        if (col.gameObject.CompareTag("Ground"))
             _isGrounded = false;
-        }
     }
 
-    void Jump()
+    private void Flip()
     {
-        if (_currentJumps >= _maxJumps || !CanJump()) return;
-
-        _currentJumps++;
-        _rb.AddForce(Vector2.up * _jumpForce, ForceMode2D.Impulse);
-
-        _animator.SetTrigger("Jump");
-        if (_currentJumps == 2)
-        {
-            _animator.SetTrigger("DoubleJump");
-        }
-    }
-
-    bool CanJump()
-    {
-        return _currentJumps < _maxJumps;
+        IsFacingRight = !IsFacingRight;
+        Vector3 localScale = transform.localScale;
+        localScale.x *= -1;
+        transform.localScale = localScale;
     }
 }
