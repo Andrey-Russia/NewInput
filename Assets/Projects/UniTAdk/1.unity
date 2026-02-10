@@ -575,7 +575,7 @@ MonoBehaviour:
   _character1: {fileID: 481713863}
   _character2: {fileID: 1765440098}
   _typeSpeed: 0.05
-  _betweenMessage: 2
+  _betweenMessage: 3
 --- !u!1 &967563296
 GameObject:
   m_ObjectHideFlags: 0
