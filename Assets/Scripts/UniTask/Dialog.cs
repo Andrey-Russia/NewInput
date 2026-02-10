@@ -2,7 +2,6 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 
@@ -14,8 +13,13 @@ public class Dialog : MonoBehaviour
     [SerializeField] private float _typeSpeed = 0.05f;
     [SerializeField] private float _betweenMessage = 3f;
 
-    private CancellationTokenSource _cts = new();
-    private List<(string message, int speaker)> dialogLines = new()
+    private CancellationTokenSource _cts;
+    private bool isPaused;
+    private bool skipTyping;
+
+    private int _currentLineIndex;
+
+    private readonly List<(string message, int speaker)> dialogLines = new()
     {
         ("Привет, как твои дела?", 1),
         ("Да нормально всё, спасибо.", 2),
@@ -25,141 +29,89 @@ public class Dialog : MonoBehaviour
         ("Хорошая идея, встретимся около метро.", 2)
     };
 
-    private int _currentLineIndex = 0;
-    private bool isPaused = false;
-    private bool isTyping = false; // чтобы отслеживать, идет ли вывод текста
-
-    async void Start()
+    private void Start()
     {
-        await ShowNextMessage(_cts.Token);
+        _cts = new CancellationTokenSource();
+        PlayDialog(_cts.Token).Forget();
     }
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
-        {
-            // Левый клик: показать всю строку
-            ShowFullLine();
-        }
-        else if (Input.GetMouseButtonDown(1))
-        {
-            // Правый клик: остановить/продолжить
-            TogglePause();
-        }
+            skipTyping = true;
+
+        if (Input.GetMouseButtonDown(1))
+            isPaused = !isPaused;
     }
 
-    private async void ShowFullLine()
+    private async UniTaskVoid PlayDialog(CancellationToken token)
     {
-        if (_currentLineIndex >= dialogLines.Count || isTyping)
-            return;
-
-        // Отменяем текущую задачу
-        _cts.Cancel();
-        _cts.Dispose();
-        _cts = new CancellationTokenSource();
-
-        var line = dialogLines[_currentLineIndex];
-        SetCharacterImage(line.speaker);
-
-        string message = line.message;
-        _textField.text = message; // показываем всю строку сразу
-
-        isTyping = false; // т.к. полностью показали строку
-
-        try
-        {
-            await UniTask.Delay(TimeSpan.FromSeconds(_betweenMessage), cancellationToken: _cts.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            // Игнорируем отмену
-        }
-
-        _currentLineIndex++;
-        await ShowNextMessage(_cts.Token);
-    }
-
-    async Task ShowNextMessage(CancellationToken cancellationToken)
-    {
-        Debug.Log("Starting ShowNextMessage");
         while (_currentLineIndex < dialogLines.Count)
         {
-            if (isPaused)
-            {
-                try
-                {
-                    await UniTask.WaitUntil(() => !isPaused, cancellationToken: cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    return; // при отмене выхода
-                }
-            }
+            await WaitIfPaused(token);
 
             var line = dialogLines[_currentLineIndex];
             SetCharacterImage(line.speaker);
 
-            var message = line.message;
+            skipTyping = false;
             _textField.text = "";
-            isTyping = true;
 
-            for (int i = 0; i < message.Length; i++)
-            {
-                if (cancellationToken.IsCancellationRequested || isPaused)
-                {
-                    Debug.Log("Cancellation or pause requested");
-                    isTyping = false;
-                    return;
-                }
+            await TypeText(line.message, token);
 
-                try
-                {
-                    _textField.text += message[i].ToString();
-                    await UniTask.Delay(TimeSpan.FromSeconds(_typeSpeed), cancellationToken: cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Игнорируем отмену
-                    isTyping = false;
-                    return;
-                }
-            }
-
-            isTyping = false;
-
-            try
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(_betweenMessage), cancellationToken: cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // Игнорируем отмену
-            }
+            await WaitDelayOrSkip(token);
 
             _currentLineIndex++;
         }
-
-        Debug.Log("Finished ShowNextMessage");
     }
 
-    private void TogglePause()
+    private async UniTask TypeText(string text, CancellationToken token)
     {
-        isPaused = !isPaused;
-
-        if (!isPaused)
+        for (int i = 0; i < text.Length; i++)
         {
-            _cts.Cancel();
-            _cts.Dispose();
-            _cts = new CancellationTokenSource();
+            if (skipTyping)
+            {
+                _textField.text = text;
+                return;
+            }
 
-            // Продолжаем выполнение
-            Task.Run(async () => await ShowNextMessage(_cts.Token));
+            await WaitIfPaused(token);
+
+            _textField.text += text[i];
+            await UniTask.Delay(TimeSpan.FromSeconds(_typeSpeed), cancellationToken: token);
         }
+    }
+
+    private async UniTask WaitDelayOrSkip(CancellationToken token)
+    {
+        float timer = 0f;
+
+        while (timer < _betweenMessage)
+        {
+            if (skipTyping)
+                return;
+
+            await WaitIfPaused(token);
+
+            timer += Time.deltaTime;
+            await UniTask.Yield();
+        }
+    }
+
+    private async UniTask WaitIfPaused(CancellationToken token)
+    {
+        while (isPaused)
+            await UniTask.Yield(token);
     }
 
     private void SetCharacterImage(int speaker)
     {
         _character1.SetActive(speaker == 1);
         _character2.SetActive(speaker == 2);
+    }
+
+    private void OnDestroy()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
     }
 }
