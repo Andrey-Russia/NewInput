@@ -69,15 +69,19 @@ public class Player : MonoBehaviour
     {
         const float maxDistance = 10f;
         const float minDistance = 1f;
-        const float zoomSensivity = 5f;
+        const float zoomSensitivity = 5f;
 
         var currentDistance = (_camera.transform.position - transform.position).magnitude;
-        var desiredDistance = currentDistance - delta * zoomSensivity;
+        var desiredDistance = currentDistance - delta * zoomSensitivity;
 
         desiredDistance = Mathf.Clamp(desiredDistance, minDistance, maxDistance);
 
-        var lookDirecton = (_camera.transform.position - transform.position).normalized;
-        _camera.transform.position = transform.position + lookDirecton * desiredDistance;
+        var lookDirection = (_camera.transform.position - transform.position).normalized;
+
+        var newPosition = transform.position + lookDirection * desiredDistance;
+        newPosition.y = _camera.transform.position.y;
+
+        _camera.transform.position = newPosition;
     }
 
     private void OnJump()
