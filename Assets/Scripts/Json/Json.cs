@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Json : MonoBehaviour
 {
-    const string jsonPath = "DataBase";
+    const string JsonPath = "DataBase";
 
     void Start()
     {
@@ -13,7 +13,8 @@ public class Json : MonoBehaviour
 
     void DeserializeFromJson()
     {
-        TextAsset textAsset = Resources.Load<TextAsset>(jsonPath);
+        Resources.UnloadAsset(Resources.Load(JsonPath));
+        TextAsset textAsset = Resources.Load<TextAsset>(JsonPath);
         if (textAsset == null)
         {
             Debug.LogError("Ошибка: файл JSON не найден!");
@@ -30,10 +31,8 @@ public class Json : MonoBehaviour
                 return;
             }
 
-            foreach (DataEntry entry in table.Entries)
-            {
+            foreach (var entry in table.Entries)
                 Debug.Log($"Имя: {entry.Name}, Номер: {entry.Number}");
-            }
         }
         catch (Exception ex)
         {

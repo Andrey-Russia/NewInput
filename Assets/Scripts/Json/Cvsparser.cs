@@ -1,53 +1,45 @@
-using System.IO;
-using System.Globalization;
-using UnityEngine;
 using Newtonsoft.Json;
-using NUnit.Framework;
+using System;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 public class Cvsparser : MonoBehaviour
 {
-    const string CvsPath = "Tablica";
-    const string Out = "DataBase";
+    const string CsvPath = "Tablica";
+    const string OutputPath = "DataBase";
 
-    private void Start()
+    void Start()
     {
         ParseCsvAndSerialize();
     }
 
     void ParseCsvAndSerialize()
     {
-        TextAsset text = Resources.Load<TextAsset>(CvsPath);
-        if (text == null)
+        TextAsset csvResource = Resources.Load<TextAsset>(CsvPath);
+        if (csvResource == null)
         {
             Debug.LogError("Ошибка: CSV-файл не найден!");
             return;
         }
-        else
-        {
-            Debug.Log("CSV-файл успешно загружен.");
-        }
 
-        StringReader reader = new StringReader(text.text);
+        StringReader reader = new StringReader(csvResource.text);
         List<DataEntry> entries = new List<DataEntry>();
 
-        reader.ReadLine(); // Пропускаем заголовки
+        reader.ReadLine();
 
         while (true)
         {
             string line = reader.ReadLine();
-            if (line == null || line.Length == 0) break;
+            if (line == null || line.Trim().Length == 0) break;
 
-            Debug.Log($"Читаем строку: {line}");
-
-            string[] columns = line.Split(';');
+            string[] columns = line.Split(';', StringSplitOptions.RemoveEmptyEntries);
 
             if (columns.Length >= 2)
             {
                 string name = columns[0].Trim('"');
-                int number;
 
-                if (int.TryParse(columns[1], out number))
+                if (int.TryParse(columns[1], out int number))
                 {
                     entries.Add(new DataEntry(name, number));
                     Debug.Log($"Добавлена запись: Имя - {name}, Номер - {number}");
@@ -68,17 +60,12 @@ public class Cvsparser : MonoBehaviour
             Debug.LogWarning("Ошибка: данные не найдены или некорректны!");
             return;
         }
-        else
-        {
-            Debug.Log($"Количество записей: {entries.Count}");
-        }
 
-        DataTable table = new DataTable(entries);
-        string json = JsonConvert.SerializeObject(table, Formatting.Indented);
-        string fullOutputPath = Application.dataPath + "/Resources/" + Out;
-        Debug.Log($"Путь к файлу: {fullOutputPath}");
+        DataTable dataTable = new DataTable(entries);
+        string jsonString = JsonConvert.SerializeObject(dataTable, Formatting.Indented);
 
-        File.WriteAllText(fullOutputPath, json);
+        string outputFullPath = Path.Combine(Application.dataPath, $"Resources/{OutputPath}.json");
+        File.WriteAllText(outputFullPath, jsonString);
         Debug.Log("Файл JSON успешно сохранён.");
     }
 }

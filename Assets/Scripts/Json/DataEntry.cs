@@ -1,10 +1,8 @@
-using System;
-
 
 public class DataEntry
 {
-    public string Name;
-    public int Number;
+    public string Name { get; set; }
+    public int Number { get; set; }
 
     public DataEntry(string name, int number)
     {
