@@ -1,12 +1,10 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "ItemData", menuName = "Items")]
+[CreateAssetMenu(menuName = "Inventory/Item")]
 public class Item : ScriptableObject
 {
-    [SerializeField] private string itemId;
-    public string Name = "Item";
+    public string ID;
+    public string Name;
+    public int Price;
     public Sprite Icon;
-    public int Price = 500;
-
-    public string ID => itemId;
 }

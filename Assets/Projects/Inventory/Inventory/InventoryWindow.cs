@@ -1,166 +1,117 @@
-﻿using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-internal class InventoryWindow : MonoBehaviour
+public class InventoryWindow : MonoBehaviour
 {
-    [SerializeField] Inventory targetInventory; [SerializeField] RectTransform itemsPanel;
+    [SerializeField] Inventory inv;
+    [SerializeField] Transform grid;
+    [SerializeField] GameObject prefab;
 
-    [Header("UI Элементы")]
-    [SerializeField] private GameObject itemIconPrefab;
+    [SerializeField] Image icon;
+    [SerializeField] TMP_Text nameText;
 
-    [SerializeField] private Image selectedItemIcon;
-    [SerializeField] private TextMeshProUGUI selectedItemName;
+    [SerializeField] Button clearBtn;
+    [SerializeField] Button chestBtn;
 
-    [SerializeField] private Button existingChestButton;
-    [SerializeField] private Button existingClearButton;
-
-    List<GameObject> itemsIcons = new List<GameObject>();
-
-    private const int MaxInventorySize = 10;
-
-    private void Start()
+    void Start()
     {
-        targetInventory.OnItemAdded += OnItemAdded;
-        targetInventory.OnItemRemoved += HandleItemRemoved;
-        targetInventory.OnInventoryCleared += Redraw;
+        inv.OnChanged += Draw;
+        clearBtn.onClick.AddListener(inv.Clear);
+        chestBtn.onClick.AddListener(OpenChest);
 
-        existingChestButton.onClick.AddListener(OpenChest);
-        existingClearButton.onClick.AddListener(ClearInventory);
-
-        DontDestroyOnLoad(existingChestButton?.gameObject);
-        DontDestroyOnLoad(existingClearButton?.gameObject);
-
-        Redraw();
+        Draw();
     }
 
-    private void OnDestroy()
+    void Draw()
     {
-        targetInventory.OnItemAdded -= OnItemAdded;
-        targetInventory.OnItemRemoved -= HandleItemRemoved;
-        targetInventory.OnInventoryCleared -= Redraw;
-    }
+        foreach (Transform c in grid)
+            Destroy(c.gameObject);
 
-    private void OnItemAdded(Item addedItem)
-    {
-        if (targetInventory.inventorySlots.Count >= MaxInventorySize)
+        foreach (var s in inv.slots)
         {
-            return;
-        }
-
-        Redraw();
-    }
-
-    private void HandleItemRemoved(Item removedItem)
-    {
-        var slot = targetInventory.inventorySlots.FirstOrDefault(s => s.Item == removedItem);
-
-        if (slot != null)
-        {
-            OnItemRemoved(slot.Item);
-        }
-    }
-
-    private void OnItemRemoved(Item removedItem) => Redraw();
-
-    public void Redraw()
-    {
-        ClearDrawn();
-
-        foreach (var slot in targetInventory.inventorySlots.Take(MaxInventorySize))
-        {
-            CreateIcon(slot);
-        }
-    }
-
-    private void CreateIcon(InventorySlot slot)
-    {
-        GameObject iconObj = Instantiate(itemIconPrefab, itemsPanel);
-        Image iconImage = iconObj.GetComponent<Image>();
-        Button iconButton = iconObj.GetComponent<Button>();
-
-        iconImage.sprite = slot.Item.Icon;
-
-        RectTransform rectTransform = iconObj.GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = new Vector2(slot.X * 50, -slot.Y * 50);
-
-        EventTrigger trigger = iconButton.gameObject.AddComponent<EventTrigger>();
-
-        EventTrigger.Entry leftClickEntry = new EventTrigger.Entry();
-        leftClickEntry.eventID = EventTriggerType.PointerClick;
-        leftClickEntry.callback.AddListener((data) =>
-        {
-            PointerEventData ped = data as PointerEventData;
-            if (ped.button == PointerEventData.InputButton.Left)
+            if (s == null || s.Item == null)
             {
-                ShowSelectedInfo(slot);
+                Debug.LogError("Slot or Item is NULL");
+                continue;
             }
-        });
-        trigger.triggers.Add(leftClickEntry);
 
-        EventTrigger.Entry rightClickEntry = new EventTrigger.Entry();
-        rightClickEntry.eventID = EventTriggerType.PointerClick;
-        rightClickEntry.callback.AddListener((data) =>
-        {
-            PointerEventData ped = data as PointerEventData;
-            if (ped.button == PointerEventData.InputButton.Right)
+            var go = Instantiate(prefab, grid);
+
+            var img = go.GetComponent<Image>();
+
+            if (img == null)
             {
-                DeleteItem(slot);
+                Debug.LogError("No Image on prefab");
+                continue;
             }
-        });
-        trigger.triggers.Add(rightClickEntry);
 
-        itemsIcons.Add(iconObj);
-    }
+            img.sprite = s.Item.Icon;
 
-    void ClearDrawn()
-    {
-        foreach (var obj in itemsIcons)
-        {
-            Destroy(obj);
+            var drag = go.AddComponent<DragItem>();
+            drag.slot = s;
+            drag.window = this;
+
+            InventorySlot capturedSlot = s;
+
+            var trigger = go.AddComponent<EventTrigger>();
+
+            var leftClick = new EventTrigger.Entry();
+            leftClick.eventID = EventTriggerType.PointerClick;
+            leftClick.callback.AddListener((data) =>
+            {
+                var ev = (PointerEventData)data;
+
+                if (ev.button == PointerEventData.InputButton.Left)
+                {
+                    Select(capturedSlot);
+                }
+            });
+            trigger.triggers.Add(leftClick);
+
+            var rightClick = new EventTrigger.Entry();
+            rightClick.eventID = EventTriggerType.PointerClick;
+            rightClick.callback.AddListener((data) =>
+            {
+                var ev = (PointerEventData)data;
+
+                if (ev.button == PointerEventData.InputButton.Right)
+                {
+                    DeleteItem(capturedSlot);
+                }
+            });
+            trigger.triggers.Add(rightClick);
         }
-        itemsIcons.Clear();
+
+        chestBtn.interactable = inv.slots.Count < inv.maxItems;
     }
 
-    void ShowSelectedInfo(InventorySlot slot)
+    void Select(InventorySlot s)
     {
-        selectedItemIcon.sprite = slot.Item.Icon;
-        selectedItemIcon.enabled = true;
+        icon.sprite = s.Item.Icon;
+        nameText.text = s.Item.Name + "\n����: " + s.Item.Price;
+    }
 
-        selectedItemName.text = $"{slot.Item.Name}\nЦена: {slot.Item.Price}";
+    void DeleteItem(InventorySlot slot)
+    {
+        if (slot == null) return;
+
+        inv.Remove(slot);
     }
 
     void OpenChest()
     {
-        if (targetInventory.StartItems.Count > 0)
+        if (inv.slots.Count >= inv.maxItems)
         {
-            int randomIndex = Random.Range(0, targetInventory.StartItems.Count);
-            targetInventory.AddItem(targetInventory.StartItems[randomIndex]);
+            Debug.Log("Inventory full");
+            return;
         }
-    }
 
-    private void DeleteItem(InventorySlot slot)
-    {
-        if (slot != null)
-        {
-            targetInventory.RemoveItem(slot.Item);
-        }
-    }
+        Item item = inv.GetRandomItem();
 
-    private void ClearInventory()
-    {
-        targetInventory.ClearInventory();
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-        }
+        if (item != null)
+            inv.Add(item);
     }
 }

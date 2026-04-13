@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 688f3920b0b3127449436b3bb9a39600, type: 3}
   m_Name: d
   m_EditorClassIdentifier: 
-  itemId: 0
+  ID: 0
   Name: "\u042F\u0431\u043B\u043E\u043A\u043E"
+  Price: 100
   Icon: {fileID: 7293598183456022363, guid: 1ddc9afd21fec77489b1248d18f31b68, type: 3}
-  Price: 500

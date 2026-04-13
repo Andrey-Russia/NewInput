@@ -1,152 +1,134 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    public Action<Item> OnItemAdded;
-    public Action<Item> OnItemRemoved;
-    public Action OnInventoryCleared;
+    public Action OnChanged;
 
-    [SerializeField] internal List<Item> StartItems = new List<Item>();
-    [SerializeField] private int gridWidth = 5;
+    [SerializeField] private ItemDatabase database;
+    [SerializeField] private List<Item> startItems;
+    [SerializeField] internal int maxItems = 9;
 
-    internal List<InventorySlot> inventorySlots = new List<InventorySlot>();
-    private string savePath;
+    public List<InventorySlot> slots = new List<InventorySlot>();
+
+    private string path;
 
     private void Awake()
     {
-        savePath = Path.Combine(Application.persistentDataPath, "inventory_save.json");
-        LoadInventory();
+        path = Path.Combine(Application.persistentDataPath, "inv.json");
+        database.Init();
 
-        if (inventorySlots.Count == 0)
+        Load();
+
+        if (slots.Count == 0)
         {
-            for (int i = 0; i < StartItems.Count; i++)
-            {
-                AddItem(StartItems[i]);
-            }
+            foreach (var item in startItems)
+                Add(item);
         }
+
+        OnChanged?.Invoke();
     }
 
-    private void LogJson(string json)
-    {
-        Debug.Log($"Saved JSON:\n{json}");
-    }
-
-    public void AddItem(Item item)
+    public void Add(Item item)
     {
         if (item == null) return;
 
-        int x = 0, y = 0;
-        FindEmptySlot(ref x, ref y);
-
-        var newSlot = new InventorySlot(item, x, y);
-        inventorySlots.Add(newSlot);
-
-        OnItemAdded?.Invoke(newSlot.Item);
-        SaveInventory();
-    }
-
-    public void RemoveItem(Item itemToRemove)
-    {
-        var slotToRemove = inventorySlots.Find(s => s.Item == itemToRemove);
-        if (slotToRemove != null)
+        if (slots.Count >= maxItems)
         {
-            inventorySlots.Remove(slotToRemove);
-            OnItemRemoved?.Invoke(slotToRemove.Item);
-            SaveInventory();
+            Debug.Log("Inventory is full");
+            return;
         }
+
+        var pos = FindFree();
+        slots.Add(new InventorySlot(item, pos.x, pos.y));
+
+        Save();
+        OnChanged?.Invoke();
     }
 
-    public void ClearInventory()
+    public void Remove(InventorySlot slot)
     {
-        inventorySlots.Clear();
-        OnInventoryCleared?.Invoke();
-        SaveInventory();
+        slots.Remove(slot);
+        Save();
+        OnChanged?.Invoke();
     }
 
-    [System.Serializable]
-    private class SaveData
+    public void Clear()
+    {
+        slots.Clear();
+        Save();
+        OnChanged?.Invoke();
+    }
+
+    public Vector2Int FindFree()
+    {
+        for (int y = 0; y < 10; y++)
+            for (int x = 0; x < 10; x++)
+                if (!slots.Exists(s => s.X == x && s.Y == y))
+                    return new Vector2Int(x, y);
+
+        return Vector2Int.zero;
+    }
+
+    [Serializable]
+    class SaveData
     {
         public List<SlotData> slots;
 
-        [System.Serializable]
+        [Serializable]
         public class SlotData
         {
-            public string itemID;
+            public string id;
             public int x, y;
-
-            public SlotData(string id, int _x, int _y)
-            {
-                itemID = id;
-                x = _x;
-                y = _y;
-            }
         }
     }
 
-    private void SaveInventory()
+    void Save()
     {
         var data = new SaveData();
         data.slots = new List<SaveData.SlotData>();
 
-        foreach (var slot in inventorySlots)
+        foreach (var s in slots)
         {
-            data.slots.Add(new SaveData.SlotData(slot.Item.ID, slot.X, slot.Y));
+            data.slots.Add(new SaveData.SlotData
+            {
+                id = s.Item.ID,
+                x = s.X,
+                y = s.Y
+            });
         }
 
-        string json = JsonUtility.ToJson(data);
-        LogJson(json);
-        File.WriteAllText(savePath, json);
+        File.WriteAllText(path, JsonUtility.ToJson(data, true));
     }
 
-    private void LoadInventory()
+    void Load()
     {
-        if (!File.Exists(savePath)) return;
+        if (!File.Exists(path)) return;
 
-        string json = File.ReadAllText(savePath);
+        var json = File.ReadAllText(path);
         var data = JsonUtility.FromJson<SaveData>(json);
 
-        inventorySlots.Clear();
+        slots.Clear();
 
-        foreach (var slotData in data.slots)
+        foreach (var s in data.slots)
         {
-            Item foundItem = FindItemByID(slotData.itemID);
-            if (foundItem != null)
-            {
-                inventorySlots.Add(new InventorySlot(foundItem, slotData.x, slotData.y));
-                OnItemAdded?.Invoke(inventorySlots[inventorySlots.Count - 1].Item);
-            }
+            var item = database.Get(s.id);
+            if (item != null)
+                slots.Add(new InventorySlot(item, s.x, s.y));
         }
     }
 
-    private void FindEmptySlot(ref int x, ref int y)
+    public Item GetRandomItem()
     {
-        bool slotFound = false;
-        for (int iY = 0; iY < 100; iY++)
+        if (database.items == null || database.items.Count == 0)
         {
-            for (int iX = 0; iX < gridWidth; iX++)
-            {
-                if (!IsSlotOccupied(iX, iY))
-                {
-                    x = iX;
-                    y = iY;
-                    slotFound = true;
-                    break;
-                }
-            }
-            if (slotFound) break;
+            Debug.LogError("Database empty");
+            return null;
         }
-    }
 
-    private bool IsSlotOccupied(int x, int y)
-    {
-        return inventorySlots.Exists(s => s.X == x && s.Y == y);
-    }
-
-    private Item FindItemByID(string id)
-    {
-        return null;
+        int index = UnityEngine.Random.Range(0, database.items.Count);
+        return database.items[index];
     }
 }
