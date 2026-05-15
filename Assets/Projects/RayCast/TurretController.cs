@@ -2,89 +2,97 @@ using UnityEngine;
 
 public class TurretController : MonoBehaviour
 {
-    [SerializeField] private Camera playerCamera;
     [SerializeField] private Transform turretHead;
-    [SerializeField] private TurretBarrelRecoil turretBarrel;
+    [SerializeField] private Transform turretBarrel;
+    [SerializeField] private TurretBarrelRecoil barrelRecoil;
     [SerializeField] private Transform firePoint;
     [SerializeField] private Projectile projectilePrefab;
 
     [SerializeField] private float projectileSpeed = 35f;
     [SerializeField] private float maxShootDistance = 200f;
 
-    [SerializeField] private float rotationSpeed = 8f;
-    [SerializeField] private float maxRotationAngle = 80f;
+    [SerializeField] private float horizontalRotationSpeed = 90f;
+
+    [SerializeField] private float verticalMoveSpeed = 2f;
+    [SerializeField] private float minBarrelY = 0f;
+    [SerializeField] private float maxBarrelY = 1.5f;
 
     [SerializeField] private LayerMask targetLayerMask;
 
     private RaycastHit _currentHit;
     private bool _hasHit;
 
+    private Vector3 _initialBarrelLocalPosition;
+
     public RaycastHit CurrentHit => _currentHit;
     public bool HasHit => _hasHit;
 
+    private void Awake()
+    {
+        _initialBarrelLocalPosition =
+            turretBarrel.localPosition;
+    }
+
     private void Update()
     {
-        RotateTurretToCursor();
+        RotateHorizontally();
+        MoveBarrelVertically();
+
         PerformForwardRaycast();
         HandleShoot();
     }
 
-    private void RotateTurretToCursor()
+    private void RotateHorizontally()
     {
-        Ray ray =
-            playerCamera.ScreenPointToRay(Input.mousePosition);
+        float input = 0f;
 
-        Plane groundPlane =
-            new Plane(Vector3.up, Vector3.zero);
-
-        if (!groundPlane.Raycast(ray, out float distance))
+        if (Input.GetKey(KeyCode.A))
         {
-            return;
+            input = -1f;
         }
 
-        Vector3 targetPoint =
-            ray.GetPoint(distance);
-
-        Vector3 direction =
-            targetPoint - turretHead.position;
-
-        direction.y = 0f;
-
-        if (direction.sqrMagnitude < 0.001f)
+        if (Input.GetKey(KeyCode.D))
         {
-            return;
+            input = 1f;
         }
 
-        Quaternion targetRotation =
-            Quaternion.LookRotation(direction);
-
-        turretHead.rotation = Quaternion.Slerp(
-            turretHead.rotation,
-            targetRotation,
-            Time.deltaTime * rotationSpeed);
-
-        ClampRotation();
+        turretHead.Rotate(
+            Vector3.up,
+            input * horizontalRotationSpeed * Time.deltaTime,
+            Space.World);
     }
 
-    private void ClampRotation()
+    private void MoveBarrelVertically()
     {
-        Vector3 localEuler =
-            turretHead.localEulerAngles;
+        float input = 0f;
 
-        float yAngle = localEuler.y;
-
-        if (yAngle > 180f)
+        if (Input.GetKey(KeyCode.W))
         {
-            yAngle -= 360f;
+            input = 1f;
         }
 
-        yAngle = Mathf.Clamp(
-            yAngle,
-            -maxRotationAngle,
-            maxRotationAngle);
+        if (Input.GetKey(KeyCode.S))
+        {
+            input = -1f;
+        }
 
-        turretHead.localEulerAngles =
-            new Vector3(0f, yAngle, 0f);
+        Vector3 localPosition =
+            turretBarrel.localPosition;
+
+        localPosition.y +=
+            input *
+            verticalMoveSpeed *
+            Time.deltaTime;
+
+        localPosition.y = Mathf.Clamp(
+            localPosition.y,
+            minBarrelY,
+            maxBarrelY);
+
+        turretBarrel.localPosition = new Vector3(
+            _initialBarrelLocalPosition.x,
+            localPosition.y,
+            _initialBarrelLocalPosition.z);
     }
 
     private void PerformForwardRaycast()
@@ -122,7 +130,10 @@ public class TurretController : MonoBehaviour
 
         projectile.Initialize(projectileSpeed);
 
-        turretBarrel.PlayRecoil();
+        if (barrelRecoil != null)
+        {
+            barrelRecoil.PlayRecoil();
+        }
     }
 
     private void OnDrawGizmos()
@@ -144,7 +155,7 @@ public class TurretController : MonoBehaviour
 
             Gizmos.DrawSphere(
                 _currentHit.point,
-                0.4f);
+                0.35f);
         }
     }
 }

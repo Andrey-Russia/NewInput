@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class TurretBarrelRecoil : MonoBehaviour
 {
-    [SerializeField] private float recoilDistance = 0.5f;
-    [SerializeField] private float recoilSpeed = 12f;
-    [SerializeField] private float returnSpeed = 6f;
+    [SerializeField] private float recoilDistance = 0.2f;
+    [SerializeField] private float recoilSpeed = 18f;
+    [SerializeField] private float returnSpeed = 10f;
 
     private Vector3 _initialLocalPosition;
     private Vector3 _targetLocalPosition;
@@ -24,31 +24,35 @@ public class TurretBarrelRecoil : MonoBehaviour
 
     public void PlayRecoil()
     {
-        _targetLocalPosition = _initialLocalPosition - Vector3.forward * recoilDistance;
+        _targetLocalPosition =
+            _initialLocalPosition - Vector3.right * recoilDistance;
+
         _isRecoiling = true;
     }
 
     private void AnimateRecoil()
     {
-        if (_isRecoiling)
-        {
-            transform.localPosition = Vector3.Lerp(
-                transform.localPosition,
-                _targetLocalPosition,
-                Time.deltaTime * recoilSpeed);
+        float speed =
+            _isRecoiling
+            ? recoilSpeed
+            : returnSpeed;
 
-            if (Vector3.Distance(transform.localPosition, _targetLocalPosition) < 0.01f)
-            {
-                _targetLocalPosition = _initialLocalPosition;
-                _isRecoiling = false;
-            }
-        }
-        else
-        {
-            transform.localPosition = Vector3.Lerp(
+        Vector3 targetPosition =
+            _isRecoiling
+            ? _targetLocalPosition
+            : _initialLocalPosition;
+
+        transform.localPosition = Vector3.Lerp(
+            transform.localPosition,
+            targetPosition,
+            Time.deltaTime * speed);
+
+        if (_isRecoiling &&
+            Vector3.Distance(
                 transform.localPosition,
-                _initialLocalPosition,
-                Time.deltaTime * returnSpeed);
+                targetPosition) < 0.01f)
+        {
+            _isRecoiling = false;
         }
     }
 }

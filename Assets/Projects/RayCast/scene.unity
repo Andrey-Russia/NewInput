@@ -165,18 +165,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9faa3f0a39d1baa4db7a73d3ddf40d54, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerCamera: {fileID: 306855161}
   turretHead: {fileID: 482772505}
-  turretBarrel: {fileID: 1601128152}
+  turretBarrel: {fileID: 407194823}
+  barrelRecoil: {fileID: 1601128152}
   firePoint: {fileID: 746767725}
   projectilePrefab: {fileID: 5902108595250338422, guid: 9bdf39d12d84a524c9acf9828e8ca7e4, type: 3}
   projectileSpeed: 30
   maxShootDistance: 200
-  rotationSpeed: 90
-  maxRotationAngle: 80
+  horizontalRotationSpeed: 20
+  verticalMoveSpeed: 2
+  minBarrelY: -2
+  maxBarrelY: 10
   targetLayerMask:
     serializedVersion: 2
-    m_Bits: 24
+    m_Bits: 8
 --- !u!114 &233981276
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,6 +203,7 @@ GameObject:
   - component: {fileID: 306855162}
   - component: {fileID: 306855161}
   - component: {fileID: 306855160}
+  - component: {fileID: 306855163}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -275,13 +278,29 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 306855159}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.18455178, y: 0, z: 0, w: 0.98282284}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 3.52, y: 3.06, z: -3.03}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 21.27, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &306855163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 306855159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0d72bb4291170b469e2910fc14706cb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  turretHead: {fileID: 482772505}
+  offset: {x: 3.32, y: 0.57, z: -0.03}
+  followSpeed: 20
+  rotationSpeed: 20
 --- !u!1 &399175791
 GameObject:
   m_ObjectHideFlags: 0
@@ -379,6 +398,38 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &407194822
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 407194823}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &407194823
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 407194822}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1601128148}
+  m_Father: {fileID: 482772505}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &482772504
 GameObject:
   m_ObjectHideFlags: 0
@@ -411,7 +462,7 @@ Transform:
   m_LocalScale: {x: 0.71009, y: 0.9523017, z: 0.71009}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1601128148}
+  - {fileID: 407194823}
   m_Father: {fileID: 666852546}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &482772506
@@ -521,7 +572,7 @@ MonoBehaviour:
   width: 5
   height: 5
   spacing: 1.1
-  distanceFromTurret: 25
+  distanceFromTurret: 10
 --- !u!4 &559034390
 Transform:
   m_ObjectHideFlags: 0
@@ -705,13 +756,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1601128147}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -1.03, y: 0.085, z: 0}
-  m_LocalScale: {x: 0.3947669, y: 0.71287006, z: 0.3947669}
+  m_LocalRotation: {x: -0, y: -0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: -1.0300002, y: 0.08500003, z: 0}
+  m_LocalScale: {x: 0.39476687, y: 0.71287, z: 0.3947669}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 746767725}
-  m_Father: {fileID: 482772505}
+  m_Father: {fileID: 407194823}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 90}
 --- !u!136 &1601128149
 CapsuleCollider:
